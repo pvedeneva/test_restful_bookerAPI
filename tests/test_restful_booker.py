@@ -5,47 +5,53 @@ import json
 from schema_assertion_helper import assert_booking_schema
 from conftest import assert_response_contains_request_data
 
+
+class PartialUpdateBooking:
+    def test_part_update_dates(self, booking_lifecycle, header_with_token):
+        r = requests.patch(f'{config.BASE_URL}/booking/{booking_lifecycle}',
+                         data=config.part_upd_dates_data, headers=header_with_token)
+
+        assert r.status_code == 200, 'Can`t perform partial update'
+
+#TODO проверять что такое id откликается на get
+#TODO проверять что в get поля как измененные
+
+
+@pytest.mark.skip
 class TestGetBooking:
-    @pytest.mark.skip
     def test_get_all_booking_ids(self, booking_lifecycle):
         r = requests.get(f'{config.BASE_URL}/booking')
         assert booking_lifecycle in config.list_booking_ids(r.json())
         assert r.status_code == 200, 'All bookings request failed'
 
-    @pytest.mark.skip
     def test_get_booking_by_id(self,booking_lifecycle):
         '''create booking --> booking_id'''
         r = requests.get(f'{config.BASE_URL}/booking/{booking_lifecycle}')
 
         assert r.status_code == 200, 'Booking by id not found with method GetBooking'
 
-    @pytest.mark.skip
     def test_get_bookings_by_lastname(self, booking_lifecycle):
         r = requests.get(f'{config.BASE_URL}/booking?lastname=Potter')
         assert booking_lifecycle in config.list_booking_ids(r.json())
         assert r.status_code == 200, 'Booking by lastname not found with method GetBooking'
 
-    @pytest.mark.skip
     def test_get_bookings_by_fullname(self, booking_lifecycle):
         r = requests.get(f'{config.BASE_URL}/booking?lastname=Potter&firstname=Harry')
         assert booking_lifecycle in config.list_booking_ids(r.json())
         assert r.status_code == 200, 'Booking by fullname not found with method GetBooking'
 
-    @pytest.mark.skip
     def test_get_bookings_by_check_in(self, booking_lifecycle):
         r = requests.get(f'{config.BASE_URL}/booking?checkin=2025-03-02')
         assert booking_lifecycle in config.list_booking_ids(r.json()), 'Booking id is not ' \
                                                                        'present in GetBooking by check in'
         assert r.status_code == 200, 'Booking by check_in not found with method GetBooking'
 
-    @pytest.mark.skip
     def test_get_bookings_by_check_out(self, booking_lifecycle):
         r = requests.get(f'{config.BASE_URL}/booking?checkout=2025-03-15')
         assert booking_lifecycle in config.list_booking_ids(r.json()), 'Booking id is not ' \
                                                                        'present in GetBooking by check out'
         assert r.status_code == 200, 'Booking by check_out not found with method GetBooking'
 
-    @pytest.mark.skip
     def test_get_bookings_by_both_checkdates(self, booking_lifecycle):
         r = requests.get(f'{config.BASE_URL}/booking?checkin=2025-03-02&checkout=2025-03-15')
 
@@ -53,14 +59,12 @@ class TestGetBooking:
                                                                        'present in GetBooking by check out and in'
         assert r.status_code == 200, 'Booking by check_out not found with method GetBooking'
 
-    @pytest.mark.skip
     def test_get_non_existant_booking(self):
         r = requests.get(f'{config.BASE_URL}/booking?lastname=Potter&firstname=HarryJames')
 
         assert  r.json() == [], 'Found non-existant booking'
         assert r.status_code == 200, 'Not 200 in non-existant booking search'
 
-    @pytest.mark.skip
     def test_get_booking_inside_check_in_boundary(self, booking_lifecycle):
         """Check if booking is in result with earlier check in date < (2025-03-01)"""
         r = requests.get(f'{config.BASE_URL}/booking?checkin=2025-03-01')
@@ -68,7 +72,6 @@ class TestGetBooking:
         assert  booking_lifecycle in config.list_booking_ids(r.json()), 'Booking not found inside check_in - 1 boundary'
         assert r.status_code == 200, 'Not 200 in check_in - 1 boundary request'
 
-    @pytest.mark.skip
     def test_get_booking_inside_check_out_boundary(self, booking_lifecycle):
         """Check if booking is in result with earlier check out date < (2025-03-15)"""
         r = requests.get(f'{config.BASE_URL}/booking?checkout=2025-01-14')
@@ -76,7 +79,6 @@ class TestGetBooking:
         assert  booking_lifecycle in config.list_booking_ids(r.json()), 'Booking not found inside check_ot - 1 boundary'
         assert r.status_code == 200, 'Not 200 in check_out - 1 boundary request'
 
-    @pytest.mark.skip
     def test_get_booking_by_invalid_check_in(self, booking_lifecycle):
         """Check if booking is NOT in result with later check in date > (2025-03-02)"""
         r = requests.get(f'{config.BASE_URL}/booking?checkin=2025-03-03')
@@ -84,7 +86,6 @@ class TestGetBooking:
         assert  booking_lifecycle not in config.list_booking_ids(r.json()), 'Found booking with invalid check_in date'
         assert r.status_code == 200, 'Not 200 in invalid check_in date'
 
-    @pytest.mark.skip
     def test_get_booking_by_invalid_check_out(self, booking_lifecycle):
         """Check if booking is NOT in result with later check out date > (2025-03-15)"""
         r = requests.get(f'{config.BASE_URL}/booking?checkout=2025-01-16')
@@ -92,7 +93,6 @@ class TestGetBooking:
         assert  booking_lifecycle not in config.list_booking_ids(r.json()), 'Found booking with invalid check_out date'
         assert r.status_code == 200, 'Not 200 in invalid check_in date'
 
-    @pytest.mark.skip
     def test_get_by_invalid_check_dates(self, booking_lifecycle):
         r = requests.get(f'{config.BASE_URL}/booking?checkin=2025-03-03&checkout=2025-01-16')
 
@@ -100,14 +100,12 @@ class TestGetBooking:
         assert r.status_code == 200, 'Not 200 in invalid check date pair'
 
 
-    @pytest.mark.skip
     @pytest.mark.parametrize("invalid_id", [0, -1, 'id'])
     def test_get_booking_by_invalid_id(self, invalid_id):
         '''create booking --> booking_id'''
         r = requests.get(f'{config.BASE_URL}/booking/{invalid_id}')
         assert r.status_code == 404, 'Found booking with invalid id'
 
-    @pytest.mark.skip
     def test_get_booking_by_nonexistent_id(self):
         '''create booking --> booking_id'''
         r = requests.get(f'{config.BASE_URL}/booking')
@@ -116,14 +114,12 @@ class TestGetBooking:
 
         assert r2.status_code == 404, 'Found booking with invalid id'
 
-    @pytest.mark.skip
     @pytest.mark.parametrize("date_format", config.invalid_check_in_format_dates) # (2025-03-02)
     def test_invalid_check_in_format(self, booking_lifecycle, date_format):
         r = requests.get(f'{config.BASE_URL}/booking?checkin={date_format}')
 
         assert r.status_code == 422, 'Found booking by invalid check in date format'
 
-    @pytest.mark.skip
     @pytest.mark.parametrize("date_format", config.invalid_check_out_format_dates) # (2025-03-15)
     def test_invalid_check_out_format(self, booking_lifecycle, date_format):
         r = requests.get(f'{config.BASE_URL}/booking?checkout={date_format}')
@@ -132,7 +128,6 @@ class TestGetBooking:
 
 
 @pytest.mark.skip
-#TODO проверять что такое id откликается на get
 class TestCreateBooking:
     """test booking creation"""
     def test_create_booking(self):
@@ -172,9 +167,8 @@ class TestCreateBooking:
 
         assert r.status_code == 500, 'Created booking w equal check_in and check_out dates'
 
-
+@pytest.mark.skip
 class TestUpdateBooking:
-    #@pytest.mark.skip
     def test_update_booking_dates(self, booking_lifecycle, header_with_token):
         r = requests.put(f'{config.BASE_URL}/booking/{booking_lifecycle}',
                          data=config.update_data_change_dates, headers=header_with_token)
@@ -183,7 +177,6 @@ class TestUpdateBooking:
         assert r.status_code == 200, 'Created booking w equal check_in and check_out dates'
 
 
-    @pytest.mark.skip
     def test_update_additional(self, booking_lifecycle, header_with_token):
         r = requests.put(f'{config.BASE_URL}/booking/{booking_lifecycle}',
                          data=config.update_additional, headers=header_with_token)
@@ -192,7 +185,6 @@ class TestUpdateBooking:
         assert assert_response_contains_request_data(r.json(), json.loads(config.update_data_change_dates))
         assert r.status_code == 200, 'Wrong status code update_additional'
 
-    @pytest.mark.skip
     def test_update_all_booking_data(self, booking_lifecycle, header_with_token):
         r = requests.put(f'{config.BASE_URL}/booking/{booking_lifecycle}',
                          data=config.update_all_booking_data, headers=header_with_token)
@@ -201,24 +193,23 @@ class TestUpdateBooking:
         assert assert_response_contains_request_data(r.json(), json.loads(config.update_data_change_dates))
         assert r.status_code == 200, 'Created booking w equal check_in and check_out dates'
 
-    @pytest.mark.skip
     def test_update_without_cert(self, booking_lifecycle):
         r = requests.put(f'{config.BASE_URL}/booking/{booking_lifecycle}',
                          data=config.update_data_change_dates)
         assert r.text == 'Forbidden'
         assert r.status_code == 403, 'No Forbidden status code in unauthorized update'
 
-    @pytest.mark.skip
     def test_update_invalid_dates(self, booking_lifecycle, header_with_token):
         r = requests.put(f'{config.BASE_URL}/booking/{booking_lifecycle}',
                          data=config.update_unvalid_dates, headers=header_with_token)
         assert r.status_code == 500, 'No error for update with check out b4 check in'
 
-    @pytest.mark.skip
     def test_update_dates_in_past(self, booking_lifecycle, header_with_token):
         r = requests.put(f'{config.BASE_URL}/booking/{booking_lifecycle}',
                          data=config.update_dates_in_past, headers=header_with_token)
 
         assert r.status_code == 500, 'Update with dates in past'
 
-#TODO кастомный ассерт на то что поля ответа как в запросе
+
+
+

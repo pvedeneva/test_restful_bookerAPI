@@ -167,5 +167,11 @@ update_dates_in_past = json.dumps({
 })
 
 # PARTIAL UPDATE
+part_upd_dates_data = json.dumps({
+    "bookingdates": {
+        "checkin": "2026-04-03",
+        "checkout": "2026-04-16"
+}}) # +1 to each field
+
 
 
