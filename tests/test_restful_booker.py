@@ -2,19 +2,10 @@ import requests
 import config
 import pytest
 import json
+import os
 from schema_assertion_helper import assert_booking_schema
 from conftest import assert_response_contains_request_data
 
-
-class PartialUpdateBooking:
-    def test_part_update_dates(self, booking_lifecycle, header_with_token):
-        r = requests.patch(f'{config.BASE_URL}/booking/{booking_lifecycle}',
-                         data=config.part_upd_dates_data, headers=header_with_token)
-
-        assert r.status_code == 200, 'Can`t perform partial update'
-
-#TODO проверять что такое id откликается на get
-#TODO проверять что в get поля как измененные
 
 
 @pytest.mark.skip
@@ -210,6 +201,50 @@ class TestUpdateBooking:
 
         assert r.status_code == 500, 'Update with dates in past'
 
+    def test_update_non_existant(self, header_with_token):
+        r = requests.get(f'{config.BASE_URL}/booking')
+        nonexistent_id = config.nonexistent_id_generator(r.json())
 
+        r2 = requests.put(f'{config.BASE_URL}/booking/{nonexistent_id}',
+                         data=config.update_all_booking_data, headers=header_with_token)
 
+        assert r2.text == 'Not Found'
+        assert r2.status_code == 404, 'Perform update booking with invalid id'
 
+class TestPartialUpdateBooking:
+    #@pytest.mark.skip
+    #TODO тут добавить параметризацию в тк по одному и обновить все
+    #TODOпроблема тут с проверкой checkin check out
+    @pytest.mark.parametrize("dates", config.part_upd_dates_data)
+    def test_part_update_dates(self, booking_lifecycle, dates, header_with_token):
+        r = requests.patch(f'{config.BASE_URL}/booking/{booking_lifecycle}',
+                         data=dates, headers=header_with_token)
+        assert_booking_schema(r.json())
+        assert assert_response_contains_request_data(r.json(), json.loads(dates))
+        assert r.status_code == 200, 'Can`t perform partial update'
+
+    @pytest.mark.skip
+    def test_part_update_nonexistant_booking(self, header_with_token):
+        r = requests.get(f'{config.BASE_URL}/booking')
+        nonexistent_id = config.nonexistent_id_generator(r.json())
+
+        r2 = requests.patch(f'{config.BASE_URL}/booking/{nonexistent_id}',
+                         data=config.part_upd_dates_data, headers=header_with_token)
+        assert r2.text == 'Not Found'
+        assert r2.status_code == 404, 'Partial updates booking with invalid id'
+
+    def test_part_update_with_empty_data(self, booking_lifecycle, header_with_token):
+        """partial update with empty schema doesn`t affect booking"""
+        r = requests.patch(f'{config.BASE_URL}/booking/{booking_lifecycle}',
+                         data={}, headers=header_with_token)
+        assert_booking_schema(r.json())
+        assert assert_response_contains_request_data(r.json(), json.loads(config.booking_data))
+        assert r.status_code == 200, 'Can`t perform empty partial update'
+
+    @pytest.mark.parametrize("fields", config.part_upd_fields)
+    def test_part_update_each_field(self, booking_lifecycle, fields, header_with_token):
+        r = requests.patch(f'{config.BASE_URL}/booking/{booking_lifecycle}',
+                         data=fields, headers=header_with_token)
+        assert_booking_schema(r.json())
+        assert assert_response_contains_request_data(r.json(), json.loads(fields))
+        assert r.status_code == 200, 'Can`t perform empty partial update'

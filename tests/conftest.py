@@ -92,16 +92,24 @@ def assert_response_contains_request_data(response_data, request_data):
 
 
 def assert_response_contains_request_data(response_data, request_data):
-    '''Custom assert to check if all fields in answer equals to fields in request'''
-    results = [] # записыать все что не пустое
+    """Custom assert for UpdateBooking and PartialUpdate
+    to check if all fields in answer equals to fields in request"""
+    results = [] # track non-empty fields
+    # возможно лучше тут добавить обработку checkin check out полей
     for key in request_data:
-        print(key)
+        if key == 'bookingdates': # case w check in
+            pass
+
+        #    if request_data[key] != response_data['bookingdates'][key]:
+        #        results.append(f'{key} - {request_data[key]} not in response')
+        #        continue
         if request_data[key] != response_data[key]:
             results.append(f'{key} - {request_data[key]} not in response')
     if results:
         raise CustomAssertionError(*results)
     else:
         return True
+# отличается для частей только с check_in или check_out
 
 
 # OTHER TRIED FIXTURES

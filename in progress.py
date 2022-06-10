@@ -1,4 +1,6 @@
 from helpers import CustomAssertionError
+import json
+
 def assert_response_contains_request_data(response_data, request_data):
     '''Custom assert to check if all fields in answer equals to fields in request'''
     results = [] # записыать все что не пустое
@@ -31,4 +33,17 @@ request_data = {
         "checkout": "2025-03-15",
     }}
 
-assert_response_contains_request_data(response_data, request_data)
+#assert_response_contains_request_data(response_data, request_data)
+
+part_upd_fields = [json.dumps(item) for item in [{"firstname": "Harry"}, {"lastname": "Potter"}, {"totalprice": 100},
+                    {"depositpaid": True},{"checkin": "2025-03-02"},
+                    {"checkout": "2025-03-15"}, {"additionalneeds": "Invisibility cloak"}]]
+
+#print(part_upd_fields)
+
+all = {'b' : {1:'a', 2 : 'b'}}
+booking1 = {'b' : {1:'a'}}
+print(all.values())
+print(booking1.values())
+
+#print(booking1.values() in all.values())

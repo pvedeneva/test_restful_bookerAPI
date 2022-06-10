@@ -167,11 +167,17 @@ update_dates_in_past = json.dumps({
 })
 
 # PARTIAL UPDATE
-part_upd_dates_data = json.dumps({
+"""part_upd_dates_data = json.dumps({
     "bookingdates": {
         "checkin": "2026-04-03",
         "checkout": "2026-04-16"
-}}) # +1 to each field
+}}) # +1 to each field"""
 
 
+part_upd_dates_data = [json.dumps(item) for item in [{"bookingdates": {"checkin": "2026-04-03"}},
+                                                    {"bookingdates": {"checkout": "2026-04-16"}},
+                                                    {"bookingdates": {"checkin": "2027-04-03", "checkout": "2027-04-16"}}]]
+
+part_upd_fields = [json.dumps(item) for item in [{"firstname": "CustomHarry"}, {"lastname": "Custom Potter"}, {"totalprice": 200},
+                    {"depositpaid": False}, {"additionalneeds": "Invisibility cloak"}]]
 
