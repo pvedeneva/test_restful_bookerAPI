@@ -1,2 +1,0 @@
-class CustomAssertionError(Exception):
-    pass

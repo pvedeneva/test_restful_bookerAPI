@@ -4,8 +4,7 @@ import pytest
 import json
 import os
 from schema_assertion_helper import assert_booking_schema
-from conftest import assert_response_contains_request_data
-
+from helpers import assert_response_contains_request_data, assert_delete_successful
 
 
 @pytest.mark.skip
@@ -15,7 +14,7 @@ class TestGetBooking:
         assert booking_lifecycle in config.list_booking_ids(r.json())
         assert r.status_code == 200, 'All bookings request failed'
 
-    def test_get_booking_by_id(self,booking_lifecycle):
+    def test_get_booking_by_id(self, booking_lifecycle):
         '''create booking --> booking_id'''
         r = requests.get(f'{config.BASE_URL}/booking/{booking_lifecycle}')
 
@@ -53,35 +52,35 @@ class TestGetBooking:
     def test_get_non_existant_booking(self):
         r = requests.get(f'{config.BASE_URL}/booking?lastname=Potter&firstname=HarryJames')
 
-        assert  r.json() == [], 'Found non-existant booking'
+        assert r.json() == [], 'Found non-existant booking'
         assert r.status_code == 200, 'Not 200 in non-existant booking search'
 
     def test_get_booking_inside_check_in_boundary(self, booking_lifecycle):
         """Check if booking is in result with earlier check in date < (2025-03-01)"""
         r = requests.get(f'{config.BASE_URL}/booking?checkin=2025-03-01')
 
-        assert  booking_lifecycle in config.list_booking_ids(r.json()), 'Booking not found inside check_in - 1 boundary'
+        assert booking_lifecycle in config.list_booking_ids(r.json()), 'Booking not found inside check_in - 1 boundary'
         assert r.status_code == 200, 'Not 200 in check_in - 1 boundary request'
 
     def test_get_booking_inside_check_out_boundary(self, booking_lifecycle):
         """Check if booking is in result with earlier check out date < (2025-03-15)"""
         r = requests.get(f'{config.BASE_URL}/booking?checkout=2025-01-14')
 
-        assert  booking_lifecycle in config.list_booking_ids(r.json()), 'Booking not found inside check_ot - 1 boundary'
+        assert booking_lifecycle in config.list_booking_ids(r.json()), 'Booking not found inside check_ot - 1 boundary'
         assert r.status_code == 200, 'Not 200 in check_out - 1 boundary request'
 
     def test_get_booking_by_invalid_check_in(self, booking_lifecycle):
         """Check if booking is NOT in result with later check in date > (2025-03-02)"""
         r = requests.get(f'{config.BASE_URL}/booking?checkin=2025-03-03')
 
-        assert  booking_lifecycle not in config.list_booking_ids(r.json()), 'Found booking with invalid check_in date'
+        assert booking_lifecycle not in config.list_booking_ids(r.json()), 'Found booking with invalid check_in date'
         assert r.status_code == 200, 'Not 200 in invalid check_in date'
 
     def test_get_booking_by_invalid_check_out(self, booking_lifecycle):
         """Check if booking is NOT in result with later check out date > (2025-03-15)"""
         r = requests.get(f'{config.BASE_URL}/booking?checkout=2025-01-16')
 
-        assert  booking_lifecycle not in config.list_booking_ids(r.json()), 'Found booking with invalid check_out date'
+        assert booking_lifecycle not in config.list_booking_ids(r.json()), 'Found booking with invalid check_out date'
         assert r.status_code == 200, 'Not 200 in invalid check_in date'
 
     def test_get_by_invalid_check_dates(self, booking_lifecycle):
@@ -90,11 +89,11 @@ class TestGetBooking:
         assert booking_lifecycle not in config.list_booking_ids(r.json()), 'Found booking with invalid dates pair'
         assert r.status_code == 200, 'Not 200 in invalid check date pair'
 
-
     @pytest.mark.parametrize("invalid_id", [0, -1, 'id'])
     def test_get_booking_by_invalid_id(self, invalid_id):
         '''create booking --> booking_id'''
         r = requests.get(f'{config.BASE_URL}/booking/{invalid_id}')
+
         assert r.status_code == 404, 'Found booking with invalid id'
 
     def test_get_booking_by_nonexistent_id(self):
@@ -105,13 +104,13 @@ class TestGetBooking:
 
         assert r2.status_code == 404, 'Found booking with invalid id'
 
-    @pytest.mark.parametrize("date_format", config.invalid_check_in_format_dates) # (2025-03-02)
+    @pytest.mark.parametrize("date_format", config.invalid_check_in_format_dates)  # (2025-03-02)
     def test_invalid_check_in_format(self, booking_lifecycle, date_format):
         r = requests.get(f'{config.BASE_URL}/booking?checkin={date_format}')
 
         assert r.status_code == 422, 'Found booking by invalid check in date format'
 
-    @pytest.mark.parametrize("date_format", config.invalid_check_out_format_dates) # (2025-03-15)
+    @pytest.mark.parametrize("date_format", config.invalid_check_out_format_dates)  # (2025-03-15)
     def test_invalid_check_out_format(self, booking_lifecycle, date_format):
         r = requests.get(f'{config.BASE_URL}/booking?checkout={date_format}')
 
@@ -121,6 +120,7 @@ class TestGetBooking:
 @pytest.mark.skip
 class TestCreateBooking:
     """test booking creation"""
+
     def test_create_booking(self):
         r = requests.post(f'{config.BASE_URL}/booking', data=config.booking_data, headers=config.headers)
 
@@ -137,12 +137,14 @@ class TestCreateBooking:
         assert r.status_code == 500, 'Booking with invalid schema created'
 
     def test_create_booking_w_missed_in_schema(self):
-        r = requests.post(f'{config.BASE_URL}/booking', data=config.booking_data_missing_in_schema, headers=config.headers)
+        r = requests.post(f'{config.BASE_URL}/booking', data=config.booking_data_missing_in_schema,
+                          headers=config.headers)
 
         assert r.status_code == 500, 'Booking with missing in schema created'
 
     def test_create_booking_w_no_additional(self):
-        r = requests.post(f'{config.BASE_URL}/booking', data=config.booking_data_with_no_additional, headers=config.headers)
+        r = requests.post(f'{config.BASE_URL}/booking', data=config.booking_data_with_no_additional,
+                          headers=config.headers)
 
         assert r.status_code == 200, 'Booking is not created without additional parameter'
 
@@ -158,15 +160,16 @@ class TestCreateBooking:
 
         assert r.status_code == 500, 'Created booking w equal check_in and check_out dates'
 
+
 @pytest.mark.skip
 class TestUpdateBooking:
     def test_update_booking_dates(self, booking_lifecycle, header_with_token):
         r = requests.put(f'{config.BASE_URL}/booking/{booking_lifecycle}',
                          data=config.update_data_change_dates, headers=header_with_token)
+
         assert_booking_schema(r.json())
         assert assert_response_contains_request_data(r.json(), json.loads(config.update_data_change_dates))
         assert r.status_code == 200, 'Created booking w equal check_in and check_out dates'
-
 
     def test_update_additional(self, booking_lifecycle, header_with_token):
         r = requests.put(f'{config.BASE_URL}/booking/{booking_lifecycle}',
@@ -179,7 +182,7 @@ class TestUpdateBooking:
     def test_update_all_booking_data(self, booking_lifecycle, header_with_token):
         r = requests.put(f'{config.BASE_URL}/booking/{booking_lifecycle}',
                          data=config.update_all_booking_data, headers=header_with_token)
-        print(r.json())
+
         assert_booking_schema(r.json())
         assert assert_response_contains_request_data(r.json(), json.loads(config.update_data_change_dates))
         assert r.status_code == 200, 'Created booking w equal check_in and check_out dates'
@@ -187,12 +190,14 @@ class TestUpdateBooking:
     def test_update_without_cert(self, booking_lifecycle):
         r = requests.put(f'{config.BASE_URL}/booking/{booking_lifecycle}',
                          data=config.update_data_change_dates)
+
         assert r.text == 'Forbidden'
         assert r.status_code == 403, 'No Forbidden status code in unauthorized update'
 
     def test_update_invalid_dates(self, booking_lifecycle, header_with_token):
         r = requests.put(f'{config.BASE_URL}/booking/{booking_lifecycle}',
                          data=config.update_unvalid_dates, headers=header_with_token)
+
         assert r.status_code == 500, 'No error for update with check out b4 check in'
 
     def test_update_dates_in_past(self, booking_lifecycle, header_with_token):
@@ -206,45 +211,117 @@ class TestUpdateBooking:
         nonexistent_id = config.nonexistent_id_generator(r.json())
 
         r2 = requests.put(f'{config.BASE_URL}/booking/{nonexistent_id}',
-                         data=config.update_all_booking_data, headers=header_with_token)
+                          data=config.update_all_booking_data, headers=header_with_token)
 
-        assert r2.text == 'Not Found'
-        assert r2.status_code == 404, 'Perform update booking with invalid id'
+        assert r2.text == 'Method Not Allowed'
+        assert r2.status_code == 405, 'Partial updates booking with invalid id'
 
+
+@pytest.mark.skip
 class TestPartialUpdateBooking:
-    #@pytest.mark.skip
-    #TODO тут добавить параметризацию в тк по одному и обновить все
-    #TODOпроблема тут с проверкой checkin check out
-    @pytest.mark.parametrize("dates", config.part_upd_dates_data)
+    @pytest.mark.parametrize("dates", config.part_upd_dates)
     def test_part_update_dates(self, booking_lifecycle, dates, header_with_token):
         r = requests.patch(f'{config.BASE_URL}/booking/{booking_lifecycle}',
-                         data=dates, headers=header_with_token)
+                           data=dates, headers=header_with_token)
+
         assert_booking_schema(r.json())
         assert assert_response_contains_request_data(r.json(), json.loads(dates))
         assert r.status_code == 200, 'Can`t perform partial update'
 
-    @pytest.mark.skip
+    @pytest.mark.parametrize("fields", config.part_upd_fields)
+    def test_part_update_each_field(self, booking_lifecycle, fields, header_with_token):
+        r = requests.patch(f'{config.BASE_URL}/booking/{booking_lifecycle}',
+                           data=fields, headers=header_with_token)
+
+        assert_booking_schema(r.json())
+        assert assert_response_contains_request_data(r.json(), json.loads(fields))
+        assert r.status_code == 200, 'Can`t perform partial update one field at the time'
+
+    def test_part_update_two_fields(self, booking_lifecycle, header_with_token):
+        r = requests.patch(f'{config.BASE_URL}/booking/{booking_lifecycle}',
+                           data=config.part_upd_two_fields, headers=header_with_token)
+
+        assert_booking_schema(r.json())
+        assert assert_response_contains_request_data(r.json(), json.loads(config.part_upd_two_fields))
+        assert r.status_code == 200, 'Can`t perform partial update two fields at the time'
+
     def test_part_update_nonexistant_booking(self, header_with_token):
         r = requests.get(f'{config.BASE_URL}/booking')
         nonexistent_id = config.nonexistent_id_generator(r.json())
 
         r2 = requests.patch(f'{config.BASE_URL}/booking/{nonexistent_id}',
-                         data=config.part_upd_dates_data, headers=header_with_token)
-        assert r2.text == 'Not Found'
-        assert r2.status_code == 404, 'Partial updates booking with invalid id'
+                            data=config.part_upd_two_fields, headers=header_with_token)
+
+        assert r2.text == 'Method Not Allowed'
+        assert r2.status_code == 405, 'Partial updates booking with invalid id'
 
     def test_part_update_with_empty_data(self, booking_lifecycle, header_with_token):
         """partial update with empty schema doesn`t affect booking"""
         r = requests.patch(f'{config.BASE_URL}/booking/{booking_lifecycle}',
-                         data={}, headers=header_with_token)
+                           data={}, headers=header_with_token)
+
         assert_booking_schema(r.json())
         assert assert_response_contains_request_data(r.json(), json.loads(config.booking_data))
         assert r.status_code == 200, 'Can`t perform empty partial update'
 
-    @pytest.mark.parametrize("fields", config.part_upd_fields)
-    def test_part_update_each_field(self, booking_lifecycle, fields, header_with_token):
+    def test_part_update_without_cert(self, booking_lifecycle):
         r = requests.patch(f'{config.BASE_URL}/booking/{booking_lifecycle}',
-                         data=fields, headers=header_with_token)
-        assert_booking_schema(r.json())
-        assert assert_response_contains_request_data(r.json(), json.loads(fields))
+                           data=config.part_upd_two_fields)
+
+        assert r.text == 'Forbidden'
+        assert r.status_code == 403, 'No Forbidden status code in unauthorized update'
+
+
+@pytest.mark.skip
+class TestDeleteBooking:
+    def test_delete_by_id(self, create_booking, header_with_token):
+        r = requests.delete(f'{config.BASE_URL}/booking/{create_booking}',
+                            headers=header_with_token)
+
         assert r.status_code == 200, 'Can`t perform empty partial update'
+        assert r.text == 'OK', 'Can`t perform empty partial update'
+
+        assert assert_delete_successful(create_booking)
+
+    def test_delete_nonexistant_booking(self, header_with_token):
+        r = requests.get(f'{config.BASE_URL}/booking')
+        nonexistent_id = config.nonexistent_id_generator(r.json())
+
+        r2 = requests.delete(f'{config.BASE_URL}/booking/{nonexistent_id}',
+                             headers=header_with_token)
+
+        assert r2.text == 'Method Not Allowed'
+        assert r2.status_code == 405, 'Partial updates booking with invalid id'
+
+    def test_delete_without_cert(self, booking_lifecycle):
+        r = requests.delete(f'{config.BASE_URL}/booking/{booking_lifecycle}')
+
+        assert r.text == 'Forbidden'
+        assert r.status_code == 403, 'No Forbidden status code in unauthorized update'
+
+@pytest.mark.skip
+class TestCreateToken:
+    def test_create_token(self):
+        r = requests.post(f'{config.BASE_URL}/auth', data=config.token_credentials, headers=config.headers)
+
+        assert r.status_code == 200
+        assert list(r.json().keys()) == ['token']
+        assert isinstance(r.json()['token'], str)
+
+    def test_create_token_invalid_credentials(self):
+        r = requests.post(f'{config.BASE_URL}/auth', data=config.invalid_token_credentials, headers=config.headers)
+
+        assert r.status_code == 200
+        assert list(r.json().keys()) == ['reason']
+        assert r.json()['reason'] == 'Bad credentials'
+
+
+class TestHealthCheck:
+    def test_ping(self):
+        r = requests.get(f'{config.BASE_URL}/ping')
+
+        assert r.status_code == 200
+        assert r.text == 'OK'
+
+
+

@@ -4,6 +4,27 @@ BASE_URL = 'https://restful-booker.herokuapp.com'
 USER = 'admin'
 PASSW = 'password123'
 
+# token creadentials
+headers = {
+    'Content-Type': 'application/json'
+}
+
+token_credentials = json.dumps({
+    "username": USER,
+    "password": PASSW
+})
+
+update_header = {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json'
+
+}
+
+invalid_token_credentials = json.dumps({
+    "username": 'not_admin',
+    "password": 'Qwerty123'
+})
+
 
 def list_booking_ids(response):
     list_of_ids = []
@@ -174,10 +195,15 @@ update_dates_in_past = json.dumps({
 }}) # +1 to each field"""
 
 
-part_upd_dates_data = [json.dumps(item) for item in [{"bookingdates": {"checkin": "2026-04-03"}},
+part_upd_dates = [json.dumps(item) for item in [{"bookingdates": {"checkin": "2026-04-03"}},
                                                     {"bookingdates": {"checkout": "2026-04-16"}},
                                                     {"bookingdates": {"checkin": "2027-04-03", "checkout": "2027-04-16"}}]]
 
 part_upd_fields = [json.dumps(item) for item in [{"firstname": "CustomHarry"}, {"lastname": "Custom Potter"}, {"totalprice": 200},
                     {"depositpaid": False}, {"additionalneeds": "Invisibility cloak"}]]
+
+part_upd_two_fields = json.dumps({
+    "totalprice": 500,
+    "depositpaid": False,
+})
 

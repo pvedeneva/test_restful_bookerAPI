@@ -1,4 +1,4 @@
-from helpers import CustomAssertionError
+from tests.helpers import CustomAssertionError
 import json
 
 def assert_response_contains_request_data(response_data, request_data):
@@ -43,7 +43,33 @@ part_upd_fields = [json.dumps(item) for item in [{"firstname": "Harry"}, {"lastn
 
 all = {'b' : {1:'a', 2 : 'b'}}
 booking1 = {'b' : {1:'a'}}
-print(all.values())
-print(booking1.values())
+all_2 = {'b' : {1:'a', 2 : 'b'}}
+#print(list(all['b'].items()))
+#print(list(booking1['b'].items()))
+
+all_b = list(all['b'].items())
+part_b = list(booking1['b'].items())
+all_2_b = list(all['b'].items())
+
+print(all_b)
+print(part_b)
+print(all_2_b)
+
+def booking_dates_validator(request, response, results):
+    for date in request:
+        if date in response:
+            continue
+        else:
+            results.append(f'{date} not in response')
+
+
+if all_2_b[0] in all_b:
+    print('true')
+else:
+    print('f')
+
+# нужен универсальный способ для всех вариант дат
+
+
 
 #print(booking1.values() in all.values())

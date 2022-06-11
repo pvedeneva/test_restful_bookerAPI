@@ -17,7 +17,6 @@ pattern = {
             "requered" : [ "checkin", "checkout"]
         },
         "additionalneeds": {"type" : "string"}
-        #"additionalneeds": {"type" : "number"}
     },
     "required": ["firstname", "lastname", "totalprice", "depositpaid", "bookingdates"]
 }
